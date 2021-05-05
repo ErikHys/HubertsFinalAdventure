@@ -8,7 +8,8 @@ public enum Action {
     LEFT (-1, 0),
     RIGHT (1, 1),
     PICKUP (0, 2),
-    FIX (0, 3);
+    FIX (0, 3),
+    CHARGE (0, 3);
 
 
     private final int actionIndex;
@@ -55,6 +56,9 @@ public enum Action {
             }
             case 3 -> {
                 return FIX;
+            }
+            case 4 -> {
+                return CHARGE;
             }
         }
         return getRandomAction();

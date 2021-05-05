@@ -35,6 +35,7 @@ public class BridgeHubert {
         facingRight = true;
         maxNests = 2;
         fixedNests = 0;
+        charge = 3;
     }
 
     public int move(Action action){
@@ -43,8 +44,18 @@ public class BridgeHubert {
             case FIX -> fix();
             case LEFT, RIGHT -> changePos(action.getActionNumber());
             case PICKUP -> pickup();
+            case CHARGE -> chargeHubert();
         }
+//        reward--;
         return reward - oldReward;
+    }
+
+    private void chargeHubert() {
+        if(bridge.getLoc(loc).isStart()){
+            charge = 3;
+        }else {
+//            reward--;
+        }
     }
 
     private void pickup() {
@@ -76,18 +87,18 @@ public class BridgeHubert {
     }
 
     private void fix() {
-        if (!bridge.getLoc(loc+1).isWorking() && hasLog){
-//            reward += 25;
+        if (!bridge.getLoc(loc+1).isWorking() && hasLog && charge > 0){
+            reward += 25;
             bridge.fixLoc(loc+1);
             hasLog = false;
+            charge--;
 
-        }else if(!bridge.getLoc(loc).isNestFixed()){
+        }else if(!bridge.getLoc(loc).isNestFixed() && charge > 0){
             if(fixedNests < maxNests) reward += 50;
             else reward -= 50;
             bridge.fixNest(loc);
             fixedNests++;
-        }else {
-            reward--;
+            charge--;
         }
     }
 
@@ -113,6 +124,7 @@ public class BridgeHubert {
         int distStart = loc == 0 ? 1 : 0;
         int oldHasNestF = bridge.getLoc(loc).isNestFixed() ? 1 : 0;
         int max = fixedNests < maxNests ? 1 : 0;
+        int cCharge = charge;
         Action action = epsilonGreedy(dist, distStart);
         int  r = move(action);
         int newDist = bridge.getDist(fov, loc);
@@ -121,7 +133,9 @@ public class BridgeHubert {
         Action newAction = epsilonGreedy(newDist, distStart);
         int newHasNestF = bridge.getLoc(loc).isNestFixed() ? 1 : 0;
         int newMax = fixedNests < maxNests ? 1 : 0;
-        return new int[]{r, dist, oldLog, action.getActionIndex(), newDist, newLog, newAction.getActionIndex(), distStart, newDistStart, oldHasNestF, newHasNestF, max, newMax};
+        int newCharge = charge;
+//        if(r == -1000) System.out.println("Stupid1");
+        return new int[]{r, dist, oldLog, action.getActionIndex(), newDist, newLog, newAction.getActionIndex(), distStart, newDistStart, oldHasNestF, newHasNestF, max, newMax, cCharge, newCharge};
 
     }
 
@@ -136,7 +150,7 @@ public class BridgeHubert {
         if (p < epsilon){
             return Action.getRandomAction();
         }
-        return weights.getBestAction(dist, distStart, hasLog ? 1 : 0, bridge.getLoc(loc).isNestFixed() ? 1 : 0, fixedNests < maxNests ? 1 : 0);
+        return weights.getBestAction(dist, distStart, hasLog ? 1 : 0, bridge.getLoc(loc).isNestFixed() ? 1 : 0, fixedNests < maxNests ? 1 : 0, charge);
     }
 
 
@@ -164,6 +178,7 @@ public class BridgeHubert {
         hasLog = true;
         isDead = false;
         fixedNests = 0;
+        charge = 3;
         this.bridge = bridge;
     }
 
@@ -195,5 +210,7 @@ public class BridgeHubert {
         return fixedNests;
     }
 
-
+    public int getCharge() {
+        return charge;
+    }
 }

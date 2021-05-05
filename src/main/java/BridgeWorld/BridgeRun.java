@@ -46,7 +46,7 @@ public class BridgeRun implements ApplicationListener {
             while (!bridgeHubert.finished()){
                 int[] values = bridgeHubert.step();
                 weights.update(values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7],
-                        values[8], values[9], values[10], values[11], values[12]);
+                        values[8], values[9], values[10], values[11], values[12], values[13], values[14]);
                 if((ep+1) % 500000 == 0) {
                     try {
                         Thread.sleep(10);
@@ -135,12 +135,13 @@ public class BridgeRun implements ApplicationListener {
     private void updateNStep(ArrayList<int[]> nValues) {
         double g = 0;
         for (int i = 0; i < nValues.size(); i++) {
-            double gi = nValues.get(i)[0]*Math.pow(0.9, i+1);
+            double gi = nValues.get(i)[0]*Math.pow(0.9, i);
             g += gi;
         }
         int[] old = nValues.get(0);
         int[] prime = nValues.get(nValues.size()-1);
-        weights.update(g, old[1], old[2], old[3], prime[4], prime[5], prime[6], old[7], prime[8], old[9], prime[10], old[11], prime[12]);
+        weights.update(g, old[1], old[2], old[3], prime[4], prime[5], prime[6], old[7],
+                prime[8], old[9], prime[10], old[11], prime[12], old[13], prime[14]);
         nValues.remove(0);
     }
 
@@ -171,7 +172,9 @@ public class BridgeRun implements ApplicationListener {
         batch.draw(currentDirHubert, bridgeHubert.getLoc()*32, 240);
         if(bridgeHubert.isHasLog()) batch.draw(GeneralTexturesBridge.BRIDGE_WORKING, 32, 370, 16, 48);
         if(bridgeHubert.getFixedNests() < 2)batch.draw(GeneralTexturesBridge.NEST, 96, 370, 30, 16);
-
+        for (int i = 0; i < bridgeHubert.getCharge(); i++) {
+            batch.draw(GeneralTexturesBridge.POWER, 32 + 32*i, 180, 32, 32);
+        }
     }
 
     private void renderBridge() {

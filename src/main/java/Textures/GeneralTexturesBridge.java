@@ -1,6 +1,6 @@
 package Textures;
 
-import BridgeWorld.Bridge;
+
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
@@ -19,5 +19,6 @@ public class GeneralTexturesBridge {
             new Texture("Textures/Backgrounds/skill-desc_0000_foreground.png")
     };
     public static Texture NEST = new Texture("Textures/bird-nest.png");
+    public static TextureRegion POWER = new TextureRegion(new Texture("Textures/frame-1.png"));
 
 }

@@ -10,6 +10,6 @@ public class Main {
         cfg.height = 480;
         cfg.width = 800;
         cfg.resizable = false;
-        new LwjglApplication(new BridgeRun(), cfg);
+        new LwjglApplication(new TreasureHunt(), cfg);
     }
 }
