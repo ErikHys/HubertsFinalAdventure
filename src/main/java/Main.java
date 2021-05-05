@@ -1,4 +1,5 @@
 import BridgeWorld.BridgeRun;
+import TreasureWorld.TreasureHunt;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 

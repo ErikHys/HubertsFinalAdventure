@@ -2,7 +2,7 @@ package BridgeWorld;
 
 import BridgeWorld.Weights.IWeights;
 import BridgeWorld.Weights.Tabular;
-import Textures.GeneralTextures;
+import Textures.GeneralTexturesBridge;
 import Textures.LoadingBarTextures;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
@@ -154,7 +154,7 @@ public class BridgeRun implements ApplicationListener {
     public void render() {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         batch.begin();
-        for (Texture bgLayer: GeneralTextures.BGS){
+        for (Texture bgLayer: GeneralTexturesBridge.BGS){
             batch.draw(bgLayer, 0, 0, 800, 480);
         }
         if((ep+1) % 500000 == 0){
@@ -167,22 +167,22 @@ public class BridgeRun implements ApplicationListener {
     }
 
     private void renderHubert() {
-        TextureRegion currentDirHubert = bridgeHubert.isFacingRight() ? GeneralTextures.HUBERT_RIGHT : GeneralTextures.HUBERT_LEFT;
+        TextureRegion currentDirHubert = bridgeHubert.isFacingRight() ? GeneralTexturesBridge.HUBERT_RIGHT : GeneralTexturesBridge.HUBERT_LEFT;
         batch.draw(currentDirHubert, bridgeHubert.getLoc()*32, 240);
-        if(bridgeHubert.isHasLog()) batch.draw(GeneralTextures.BRIDGE_WORKING, 32, 370, 16, 48);
-        if(bridgeHubert.getFixedNests() < 2)batch.draw(GeneralTextures.NEST, 96, 370, 30, 16);
+        if(bridgeHubert.isHasLog()) batch.draw(GeneralTexturesBridge.BRIDGE_WORKING, 32, 370, 16, 48);
+        if(bridgeHubert.getFixedNests() < 2)batch.draw(GeneralTexturesBridge.NEST, 96, 370, 30, 16);
 
     }
 
     private void renderBridge() {
         for (int i = 0; i < bridgeLength; i++) {
             if(bridge.getLoc(i).isWorking()){
-                batch.draw(GeneralTextures.BRIDGE_WORKING, 32*i, 210);
+                batch.draw(GeneralTexturesBridge.BRIDGE_WORKING, 32*i, 210);
             }else {
-                batch.draw(GeneralTextures.BRIDGE_HOLE, 32*i, 271);
+                batch.draw(GeneralTexturesBridge.BRIDGE_HOLE, 32*i, 271);
             }
             if(!bridge.getLoc(i).isNestFixed()){
-                batch.draw(GeneralTextures.NEST, 32*i, 300, 37, 20);
+                batch.draw(GeneralTexturesBridge.NEST, 32*i, 300, 37, 20);
             }
         }
 

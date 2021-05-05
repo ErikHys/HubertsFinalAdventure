@@ -4,7 +4,7 @@ import BridgeWorld.Bridge;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
-public class GeneralTextures {
+public class GeneralTexturesBridge {
     public static Texture HUBERT_LEFT_TEX = new Texture("Textures/Wall-e_Robot_left.png");
     public static Texture HUBERT_RIGHT_TEX = new Texture("Textures/Wall-e_Robot_right.png");
     public static TextureRegion HUBERT_LEFT = new TextureRegion(HUBERT_LEFT_TEX, 0, 0, 32, 32);

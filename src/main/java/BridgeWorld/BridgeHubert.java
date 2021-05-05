@@ -50,7 +50,7 @@ public class BridgeHubert {
     private void pickup() {
         if(bridge.getLoc(loc).isStart() && !hasLog) {
             hasLog = true;
-            reward += 5;
+//            reward += 5;
         }
         else {
             reward--;
@@ -77,13 +77,13 @@ public class BridgeHubert {
 
     private void fix() {
         if (!bridge.getLoc(loc+1).isWorking() && hasLog){
-            reward += 25;
+//            reward += 25;
             bridge.fixLoc(loc+1);
             hasLog = false;
 
         }else if(!bridge.getLoc(loc).isNestFixed()){
             if(fixedNests < maxNests) reward += 50;
-            else reward -= 10;
+            else reward -= 50;
             bridge.fixNest(loc);
             fixedNests++;
         }else {
@@ -94,7 +94,7 @@ public class BridgeHubert {
     public boolean finished() {
         if(bridge.getLoc(loc).isEnd() || isDead){
             if(!isDead){
-                reward += 250;
+                reward += 500;
             }else {
                 reward -= 500;
             }
