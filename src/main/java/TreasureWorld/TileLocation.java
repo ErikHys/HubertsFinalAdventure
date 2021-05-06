@@ -12,6 +12,7 @@ public class TileLocation {
     public TileLocation(Items item){
         this.item = item;
         textureInt = new Random().nextInt(15);
+
     }
 
     public Items pickupItem() {
@@ -24,7 +25,26 @@ public class TileLocation {
         return item;
     }
 
+    public boolean isJewel(){
+        return item instanceof Jewel;
+    }
     public int getTextureInt() {
         return textureInt;
+    }
+
+    public void chemical() {
+        item = new Chemical();
+    }
+
+    public boolean isChemical() {
+        return item instanceof Chemical;
+    }
+
+    public void wall() {
+        item = new Wall();
+    }
+
+    public boolean isWall() {
+        return item instanceof Wall;
     }
 }

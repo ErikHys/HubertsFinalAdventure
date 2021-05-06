@@ -48,6 +48,10 @@ public class GeneralTexturesMap {
             new TextureRegion(FOREST, 96, 128, 32, 32),
             new TextureRegion(FOREST, 128, 128, 32, 32),
             new TextureRegion(FOREST, 160, 128, 32, 32)
-    };;
+    };
     public static TextureRegion JEWEL = new TextureRegion(new Texture("Textures/03.png"), 0, 0, 76, 88);
+
+    public static TextureRegion PLANTCHEM = new TextureRegion(FOREST, 32*13, 32, 32, 32);
+    public static TextureRegion STONEWALL = new TextureRegion(FOREST, 32*11, 32, 32, 32);
+    public static TextureRegion ROBOT = new TextureRegion(new Texture("Textures/elias_robot.png"));
 }
