@@ -54,4 +54,5 @@ public class GeneralTexturesMap {
     public static TextureRegion PLANTCHEM = new TextureRegion(FOREST, 32*13, 32, 32, 32);
     public static TextureRegion STONEWALL = new TextureRegion(FOREST, 32*11, 32, 32, 32);
     public static TextureRegion ROBOT = new TextureRegion(new Texture("Textures/elias_robot.png"));
+    public static TextureRegion GARBAGE = new TextureRegion(new Texture("Textures/littered_dungeon.png"), 64, 32, 32, 32);
 }

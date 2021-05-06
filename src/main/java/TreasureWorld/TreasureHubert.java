@@ -42,27 +42,31 @@ public class TreasureHubert {
         return reward - oldR;
     }
     
-    private Action epsilonGreedy(int jewelDist, int chemDist, int wallDist, int robotDist){
+    private Action epsilonGreedy(int jewelDist, int chemDist, int wallDist, int robotDist, int garbageDist){
         double p = random.nextDouble();
         if (p < epsilon){
             return Action.getRandomAction();
         }
-        return weights.getBestAction(jewelDist, chemDist, wallDist, robotDist);
+        return weights.getBestAction(jewelDist, chemDist, wallDist, robotDist, garbageDist);
     }
 
     public int[] step(){
-        int jewelDirDist = map.getTypeLoc(x, y, fov, Jewel.class);
+        int jewelDirDist = map.getTypeLoc(x, y, fov, GoodItems.class);
         int chemDist = map.getTypeLoc(x, y, fov, Chemical.class);
         int wallDist = map.getTypeLoc(x, y, fov, Wall.class);
+//        int wallDist = 0;
         int robotDist = map.getRobotDist(x, y, fov);
-        Action action = epsilonGreedy(jewelDirDist, chemDist, wallDist, robotDist);
+        int garbageDist = 0;
+        Action action = epsilonGreedy(jewelDirDist, chemDist, wallDist, robotDist, garbageDist);
         int r = move(action);
-        int newJewelDirDist = map.getTypeLoc(x, y, fov, Jewel.class);
+        int newJewelDirDist = map.getTypeLoc(x, y, fov, GoodItems.class);
         int newChemDist = map.getTypeLoc(x, y, fov, Chemical.class);
         int newWallDist = map.getTypeLoc(x, y, fov, Wall.class);
         int newRobotDist = map.getRobotDist(x, y, fov);
-        Action newAction = epsilonGreedy(newJewelDirDist, newChemDist, newWallDist, newRobotDist);
-        return new int[]{r, jewelDirDist, chemDist, wallDist, robotDist, action.getActionIndex(), newJewelDirDist, newChemDist, newWallDist, newRobotDist, newAction.getActionIndex()};
+//        int newWallDist = 0;
+        int newGarbageDist = 0;
+        Action newAction = epsilonGreedy(newJewelDirDist, newChemDist, newWallDist, newRobotDist, newGarbageDist);
+        return new int[]{r, jewelDirDist, chemDist, wallDist, robotDist, garbageDist, action.getActionIndex(), newJewelDirDist, newChemDist, newWallDist, newRobotDist, newGarbageDist, newAction.getActionIndex()};
     }
     private void changePos(Action action) {
         if(action.getX() + x < map.getSize() && action.getX() + x >= 0 && action.getY() + y < map.getSize()
@@ -92,7 +96,7 @@ public class TreasureHubert {
 
     private void pickup() {
 
-        if(map.getLoc(x, y).isJewel()){
+        if(map.getLoc(x, y).isJewel() || map.getLoc(x, y).isGarbage()){
             bag.add(map.getLoc(x, y).pickupItem());
             reward += 5;
             pointReward++;

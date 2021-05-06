@@ -18,11 +18,13 @@ public class Robot {
     public void step(){
         RobotAction action = RobotAction.getRandomAction();
         move(action);
+        map.spawn(x, y);
     }
 
     private void move(RobotAction action) {
         if(action.getX() + x < size && action.getX() + x >= 0 && action.getY() + y < size
-                && action.getY() + y >= 0 && (action.getX() + x != hX || action.getY() + y != hY) && !map.getLoc(action.getX() + x, action.getY() + y).isWall()){
+                && action.getY() + y >= 0 && (action.getX() + x != hX || action.getY() + y != hY)
+                && !map.getLoc(action.getX() + x, action.getY() + y).isWall()){
             x += action.getX();
             y += action.getY();
         }

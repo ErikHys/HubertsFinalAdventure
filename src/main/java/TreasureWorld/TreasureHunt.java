@@ -23,37 +23,38 @@ public class TreasureHunt implements ApplicationListener {
     @Override
     public void create() {
         batch = new SpriteBatch();
-        map = new Map(7);
-        weights = new Tabular(0.01, 5);
-        hubert = new TreasureHubert(0, 0, map, weights, 5);
+        map = new Map(13);
+        weights = new Tabular(0.01, 26);
+        hubert = new TreasureHubert(0, 0, map, weights, 3);
         thread = new Thread(this::nStep);
         thread.start();
         random = new Random();
 
     }
 
+    //Too much randomness for planning I think
     public void simulateDynaQ(){
-        int fov = 62;
-        int[][][][][][] model = new int[fov][fov][fov][fov][6][];
+        int fov = 26;
+        int[][][][][][][] model = new int[fov][fov][fov][fov][fov][6][];
         ArrayList<int[]> visitedStateActions = new ArrayList<>();
         double wAvgStep = 0;
         int dynaN = 50;
         for (int i = 0; i < 10000000; i++) {
             int step = 0;
-            while (!hubert.finished()){
+            while (!hubert.finished() && step < 10000){
                 // Do action
                 int[] values = hubert.step();
                 map.step();
                 //Add state to model
-                if(model[values[2]][values[1]][values[4]][values[3]][values[5]] == null){
-                    visitedStateActions.add(new int[]{values[1], values[2], values[3], values[4], values[5]});
+                if(model[values[1]][values[2]][values[3]][values[4]][values[5]][values[6]] == null){
+                    visitedStateActions.add(new int[]{values[1], values[2], values[3], values[4], values[5], values[6]});
                 }
 
                 // Update Q
-                weights.update(values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8], values[9], values[10]);
+                weights.update(values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8], values[9], values[10], values[11], values[12]);
 
                 //Update model
-                model[values[2]][values[1]][values[4]][values[3]][values[5]] = new int[]{values[0], values[6], values[7], values[8], values[9]};
+                model[values[1]][values[2]][values[3]][values[4]][values[5]][values[6]] = new int[]{values[0], values[7], values[8], values[9], values[10], values[11], values[12]};
 
                 // Update Q based on model
                 for (int j = 0; j < dynaN; j++) {
@@ -76,22 +77,22 @@ public class TreasureHunt implements ApplicationListener {
             if (i % 1000 == 0){
                 System.out.println("Ep: " + i + " Weighted avg(0.001): " + wAvgStep);
             }
-            map = new Map(7);
+            map = new Map(13);
             hubert.reset(map);
         }
 
     }
 
-    private void dynaQUpdate(ArrayList<int[]> visitedStateActions, int[][][][][][] model) {
+    private void dynaQUpdate(ArrayList<int[]> visitedStateActions, int[][][][][][][] model) {
         int[] randomActionState = visitedStateActions.get(random.nextInt(visitedStateActions.size()));
-        int[] rewardState = model[randomActionState[1]][randomActionState[0]][randomActionState[3]][randomActionState[2]][randomActionState[4]];
-        int actionPrime = weights.getBestAction(rewardState[1], rewardState[2], rewardState[3], rewardState[4]).getActionIndex();
+        int[] rewardState = model[randomActionState[0]][randomActionState[1]][randomActionState[2]][randomActionState[3]][randomActionState[4]][randomActionState[5]];
+        int actionPrime = weights.getBestAction(rewardState[1], rewardState[2], rewardState[3], rewardState[4], rewardState[5]).getActionIndex();
         weights.update(rewardState[0], randomActionState[0], randomActionState[1], randomActionState[2],
-                randomActionState[3], randomActionState[4], rewardState[1], rewardState[2], rewardState[3], rewardState[4], actionPrime);
+                randomActionState[3], randomActionState[4], randomActionState[5], rewardState[1], rewardState[2], rewardState[3], rewardState[4], rewardState[5], actionPrime);
     }
 
     public void nStep(){
-        int n = 10;
+        int n = 25;
         double wAvgStep = 0;
         for (int i = 0; i < 10000000; i++) {
             int step = 0;
@@ -103,10 +104,10 @@ public class TreasureHunt implements ApplicationListener {
                     updateNStep(nValues);
                 }
                 map.step();
-                if(i % 100000 == 0 && i != 0){
-                    hubert.setEpsilon(0.1);
+                if(i % 50000 == 0 && i != 0){
+                    hubert.setEpsilon(0.05);
                     try {
-                        Thread.sleep(55);
+                        Thread.sleep(50);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -122,7 +123,7 @@ public class TreasureHunt implements ApplicationListener {
             if (i % 1000 == 0){
                 System.out.println("Ep: " + i + " Weighted avg(0.001): " + wAvgStep);
             }
-            map = new Map(7);
+            map = new Map(13);
             hubert.reset(map);
 
 
@@ -136,7 +137,7 @@ public class TreasureHunt implements ApplicationListener {
         }
         int[] old = nValues.get(0);
         int[] prime = nValues.get(nValues.size()-1);
-        weights.update(g, old[1], old[2], old[3], old[4], old[5], prime[6], prime[7], prime[8], prime[9], prime[10]);
+        weights.update(g, old[1], old[2], old[3], old[4], old[5], old[6], prime[7], prime[8], prime[9], prime[10], prime[11], prime[12]);
         nValues.remove(0);
     }
 
@@ -174,6 +175,9 @@ public class TreasureHunt implements ApplicationListener {
                 }
                 if (map.getLoc(j, i).isWall()){
                     batch.draw(GeneralTexturesMap.STONEWALL,  j*32+(800-32 * map.getSize())/2, i*32+(480-32 * map.getSize())/2, 32, 32);
+                }
+                if (map.getLoc(j, i).isGarbage()){
+                    batch.draw(GeneralTexturesMap.GARBAGE, j*32+(800-32 * map.getSize())/2, i*32+(480-32 * map.getSize())/2, 32, 32);
                 }
             }
             batch.draw(GeneralTexturesMap.TOP[i%3], i*32+(800-32 * map.getSize())/2, map.getSize()*32+(480-32 * map.getSize())/2);

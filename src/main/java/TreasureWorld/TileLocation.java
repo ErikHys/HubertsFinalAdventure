@@ -8,6 +8,8 @@ public class TileLocation {
 
     private final int textureInt;
     private Items item;
+    private boolean hasBin;
+    private boolean hasSafe;
 
     public TileLocation(Items item){
         this.item = item;
@@ -46,5 +48,29 @@ public class TileLocation {
 
     public boolean isWall() {
         return item instanceof Wall;
+    }
+
+    public void garbage() {
+        item = new Garbage();
+    }
+
+    public boolean isGarbage() {
+        return item instanceof Garbage;
+    }
+
+    public void bin() {
+        hasBin = true;
+    }
+
+    public void safe(){
+        hasSafe = true;
+    }
+
+    public boolean isHasBin() {
+        return hasBin;
+    }
+
+    public boolean isHasSafe() {
+        return hasSafe;
     }
 }

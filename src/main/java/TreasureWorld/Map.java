@@ -9,12 +9,13 @@ public class Map {
     private final int jY;
     private final int size;
     private final Robot[] robots;
+    private final Random random;
     TileLocation[][] grid;
 
     public Map(int size){
 //        int[] seeds = new int[]{22, 29, 31, 45, 67, 97};
 //        Random random = new Random(seeds[new Random().nextInt(seeds.length)]);
-        Random random = new Random();
+        random = new Random();
         this.size = size;
         grid = new TileLocation[size][size];
         jX = random.nextInt(size);
@@ -26,11 +27,14 @@ public class Map {
                 }else {
 
                     grid[i][j] = new TileLocation(null);
-                    if (random.nextDouble() < 0.02){
+                    if (random.nextDouble() < 0.01){
                         grid[i][j].chemical();
                     }
-                    if (random.nextDouble() < 0.02){
+                    else if (random.nextDouble() < 0.01){
                         grid[i][j].wall();
+                    }
+                    else if (random.nextDouble() < 0.01){
+                        grid[i][j].garbage();
                     }
                 }
 
@@ -40,6 +44,8 @@ public class Map {
         for (int i = 0; i < robots.length; i++) {
             robots[i] = new Robot(random.nextInt(size/2) + 2, random.nextInt(size/2) + 2, size, this);
         }
+        grid[size-1][0].bin();
+        grid[size-1][1].safe();
     }
 
 
@@ -63,7 +69,7 @@ public class Map {
         int minX = Integer.MAX_VALUE;
         int minY = Integer.MAX_VALUE;
         int idx = 0;
-        int minIdx = 61;
+        int minIdx = 25;
         for (int i = -fov; i <= fov; i++) {
             for (int j = -fov; j <= fov; j++) {
                 int i1 = Math.abs(j) + Math.abs(i);
@@ -87,7 +93,7 @@ public class Map {
         int minX = Integer.MAX_VALUE;
         int minY = Integer.MAX_VALUE;
         int idx = 0;
-        int minIdx = 61;
+        int minIdx = 25;
         for (int i = -fov; i <= fov; i++) {
             for (int j = -fov; j <= fov; j++) {
                 int i1 = Math.abs(j) + Math.abs(i);
@@ -102,6 +108,13 @@ public class Map {
                             }
                         }
                     }
+//                    if (grid[i + y][j + x].getItem() != null && grid[i + y][j + x].getItem().getClass() == Wall.class){
+//                        if (i1 < (minX == Integer.MAX_VALUE ? minX : Math.abs(minX) + Math.abs(minY))) {
+//                            minX = j;
+//                            minY = i;
+//                            minIdx = idx;
+//                        }
+//                    }
 
 
                 }idx++;
@@ -120,4 +133,9 @@ public class Map {
     }
 
 
+    public void spawn(int x, int y) {
+        if(random.nextDouble() < 0.005){
+            grid[y][x].garbage();
+        }
+    }
 }

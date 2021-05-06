@@ -1,4 +1,4 @@
 package TreasureWorld;
 
-public class Jewel implements Items {
+public class Jewel implements GoodItems {
 }
