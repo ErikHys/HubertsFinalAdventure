@@ -11,30 +11,30 @@ public class Tabular {
 
     public Tabular(double alpha, int fov){
         this.alpha = alpha;
-        weights = new double[fov+1][fov+1][fov+1][fov+1][6];
+        weights = new double[61+1][61+1][61+1][61+1][6];
         random = new Random();
     }
 
-    public Action getBestAction(int jewelX, int jewelY, int chemDistX,int chemDistY){
+    public Action getBestAction(int jewel, int chemical, int wall,int robot){
         ArrayList<Integer> maxIndices = new ArrayList<>();
         double max = Double.NEGATIVE_INFINITY;
         int maxIdx = -1;
         for (int i = 0; i < 6; i++) {
-            if(weights[jewelY][jewelX][chemDistY][chemDistX][i] > max){
+            if(weights[jewel][chemical][wall][robot][i] > max){
                 maxIndices = new ArrayList<>();
-                max = weights[jewelY][jewelX][chemDistY][chemDistX][i];
+                max = weights[jewel][chemical][wall][robot][i];
                 maxIdx = i;
                 maxIndices.add(maxIdx);
-            }else if (weights[jewelY][jewelX][chemDistY][chemDistX][i] == max){
+            }else if (weights[jewel][chemical][wall][robot][i] == max){
                 maxIndices.add(i);
             }
         }
         return Action.getActionByIndex(maxIndices.get(random.nextInt(maxIndices.size())));
     }
 
-    public void update(double r, int jewelX, int jewelY, int chemDistX,int chemDistY, int actionIdx, int newJewelX
-            , int newJewelDistY, int newChemDistX,int newChemDistY, int newActionIdx){
-        weights[jewelY][jewelX][chemDistY][chemDistX][actionIdx] += alpha * (r + weights[newJewelDistY][newJewelX][newChemDistY][newChemDistX][newActionIdx] - weights[jewelY][jewelX][chemDistY][chemDistX][actionIdx]);
+    public void update(double r, int jewel, int chemical, int wall,int robot, int actionIdx, int newJewel
+            , int newChemical, int newWall,int newRobot, int newActionIdx){
+        weights[jewel][chemical][wall][robot][actionIdx] += alpha * (r + weights[newJewel][newChemical][newWall][newRobot][newActionIdx] - weights[jewel][chemical][wall][robot][actionIdx]);
         if(r == 1){
             try {
                 Thread.sleep(0);

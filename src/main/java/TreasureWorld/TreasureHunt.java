@@ -6,6 +6,7 @@ import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import utils.Pair;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -17,65 +18,98 @@ public class TreasureHunt implements ApplicationListener {
     private Thread thread;
     private SpriteBatch batch;
     private Tabular weights;
+    private Random random;
 
     @Override
     public void create() {
         batch = new SpriteBatch();
         map = new Map(7);
-        weights = new Tabular(0.01, 15);
-        hubert = new TreasureHubert(0, 0, map, weights, 7);
+        weights = new Tabular(0.01, 5);
+        hubert = new TreasureHubert(0, 0, map, weights, 5);
         thread = new Thread(this::nStep);
         thread.start();
+        random = new Random();
 
     }
 
-    public void simulate(){
+    public void simulateDynaQ(){
+        int fov = 62;
+        int[][][][][][] model = new int[fov][fov][fov][fov][6][];
+        ArrayList<int[]> visitedStateActions = new ArrayList<>();
         double wAvgStep = 0;
+        int dynaN = 50;
         for (int i = 0; i < 10000000; i++) {
             int step = 0;
             while (!hubert.finished()){
+                // Do action
                 int[] values = hubert.step();
-                weights.update(values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8], values[9], values[10]);
-                if(i > 100000){
-                    hubert.setEpsilon(0.1);
-                    try {
-                        Thread.sleep(15);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                map.step();
+                //Add state to model
+                if(model[values[2]][values[1]][values[4]][values[3]][values[5]] == null){
+                    visitedStateActions.add(new int[]{values[1], values[2], values[3], values[4], values[5]});
                 }
 
-                    step++;
+                // Update Q
+                weights.update(values[0], values[1], values[2], values[3], values[4], values[5], values[6], values[7], values[8], values[9], values[10]);
+
+                //Update model
+                model[values[2]][values[1]][values[4]][values[3]][values[5]] = new int[]{values[0], values[6], values[7], values[8], values[9]};
+
+                // Update Q based on model
+                for (int j = 0; j < dynaN; j++) {
+                    dynaQUpdate(visitedStateActions, model);
+                }
+                if(i == 100000){
+                    hubert.setEpsilon(0.1);
+//                    try {
+//                        Thread.sleep(15);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+                }
+
+                step++;
             }
-            if(i > 10) System.out.println(hubert.getReward());
-            map = new Map(10);
+
+
+            wAvgStep += 0.001 * (hubert.getReward()-wAvgStep);
+            if (i % 1000 == 0){
+                System.out.println("Ep: " + i + " Weighted avg(0.001): " + wAvgStep);
+            }
+            map = new Map(7);
             hubert.reset(map);
-            wAvgStep += 0.001 * (step-wAvgStep);
-//            System.out.println(wAvgStep);
         }
 
     }
 
+    private void dynaQUpdate(ArrayList<int[]> visitedStateActions, int[][][][][][] model) {
+        int[] randomActionState = visitedStateActions.get(random.nextInt(visitedStateActions.size()));
+        int[] rewardState = model[randomActionState[1]][randomActionState[0]][randomActionState[3]][randomActionState[2]][randomActionState[4]];
+        int actionPrime = weights.getBestAction(rewardState[1], rewardState[2], rewardState[3], rewardState[4]).getActionIndex();
+        weights.update(rewardState[0], randomActionState[0], randomActionState[1], randomActionState[2],
+                randomActionState[3], randomActionState[4], rewardState[1], rewardState[2], rewardState[3], rewardState[4], actionPrime);
+    }
+
     public void nStep(){
-        int n = 7;
+        int n = 10;
         double wAvgStep = 0;
         for (int i = 0; i < 10000000; i++) {
             int step = 0;
             ArrayList<int[]> nValues = new ArrayList<>();
-            while (!hubert.finished()){
+            while (!hubert.finished() && step < 5000){
                 int[] values = hubert.step();
                 nValues.add(values);
                 if(nValues.size() == n){
                     updateNStep(nValues);
                 }
                 map.step();
-                if(i % 20000 == 0 && i != 0){
+                if(i % 100000 == 0 && i != 0){
                     hubert.setEpsilon(0.1);
-//                    try {
-//                        Thread.sleep(55);
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
+                    try {
+                        Thread.sleep(55);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 step++;
@@ -84,11 +118,11 @@ public class TreasureHunt implements ApplicationListener {
             while (nValues.size() > 0){
                 updateNStep(nValues);
             }
-            wAvgStep += 0.001 * (hubert.getPointReward()-wAvgStep);
-            if (i % 100 == 0){
+            wAvgStep += 0.001 * (hubert.getReward()-wAvgStep);
+            if (i % 1000 == 0){
                 System.out.println("Ep: " + i + " Weighted avg(0.001): " + wAvgStep);
             }
-            map = new Map(10);
+            map = new Map(7);
             hubert.reset(map);
 
 

@@ -12,11 +12,13 @@ public class Map {
     TileLocation[][] grid;
 
     public Map(int size){
+//        int[] seeds = new int[]{22, 29, 31, 45, 67, 97};
+//        Random random = new Random(seeds[new Random().nextInt(seeds.length)]);
         Random random = new Random();
         this.size = size;
         grid = new TileLocation[size][size];
-        jX = random.nextInt(size/2) + 2;
-        jY = random.nextInt(size/2) + 2;
+        jX = random.nextInt(size);
+        jY = random.nextInt(size);
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 if (i == jY && j == jX){
@@ -34,7 +36,7 @@ public class Map {
 
             }
         }
-        robots = new Robot[2];
+        robots = new Robot[1];
         for (int i = 0; i < robots.length; i++) {
             robots[i] = new Robot(random.nextInt(size/2) + 2, random.nextInt(size/2) + 2, size, this);
         }
@@ -57,52 +59,56 @@ public class Map {
         return size;
     }
 
-    public <T> int[] getJewelDir(int x, int y, int fov, Class<T> t) {
+    public <T> int getTypeLoc(int x, int y, int fov, Class<T> t) {
         int minX = Integer.MAX_VALUE;
         int minY = Integer.MAX_VALUE;
+        int idx = 0;
+        int minIdx = 61;
         for (int i = -fov; i <= fov; i++) {
             for (int j = -fov; j <= fov; j++) {
                 int i1 = Math.abs(j) + Math.abs(i);
                 if(i1 > fov)continue;
-                if (j + x >= 0 && j + x < size && i+y >= 0 && i+y < size && grid[i+y][j+x].getItem() != null && grid[i+y][j+x].getItem().getClass() == t){
-                    if(i1 < (minX == Integer.MAX_VALUE ? minX : Math.abs(minX) + Math.abs(minY))){
-                        minX = j;
-                        minY = i;
+                if (j + x >= 0 && j + x < size && i+y >= 0 && i+y < size) {
+                    if (grid[i + y][j + x].getItem() != null && grid[i + y][j + x].getItem().getClass() == t){
+                        if (i1 < (minX == Integer.MAX_VALUE ? minX : Math.abs(minX) + Math.abs(minY))) {
+                            minX = j;
+                            minY = i;
+                            minIdx = idx;
+                        }
                     }
-                }
+
+                }idx++;
             }
         }
-        if(minX != Integer.MAX_VALUE)return new int[]{minX+fov, minX+fov};
-        return new int[]{2*fov+1, 2*fov+1};
+        return minIdx;
     }
 
-    public int[] getChemWallDir(int x, int y, int fov) {
+    public int getRobotDist(int x, int y, int fov) {
         int minX = Integer.MAX_VALUE;
         int minY = Integer.MAX_VALUE;
+        int idx = 0;
+        int minIdx = 61;
         for (int i = -fov; i <= fov; i++) {
             for (int j = -fov; j <= fov; j++) {
                 int i1 = Math.abs(j) + Math.abs(i);
                 if(i1 > fov)continue;
-                if (j + x >= 0 && j + x < size && i+y >= 0 && i+y < size && grid[i+y][j+x].getItem() != null && (grid[i+y][j+x].isWall() || grid[i+y][j+x].isChemical())){
-                    if(i1 < (minX == Integer.MAX_VALUE ? minX : Math.abs(minX) + Math.abs(minY))){
-                        minX = j;
-                        minY = i;
+                if (j + x >= 0 && j + x < size && i+y >= 0 && i+y < size){
+                    for (Robot robot: robots){
+                        if(j + x == robot.getX() && i + y == robot.getY()) {
+                            if (i1 < (minX == Integer.MAX_VALUE ? minX : Math.abs(minX) + Math.abs(minY))) {
+                                minX = j;
+                                minY = i;
+                                minIdx = idx;
+                            }
+                        }
                     }
-                }
-            }
-        }
-        for (Robot robot : robots){
-            if(Math.abs(robot.getX() - x) <= fov && Math.abs(robot.getY() - y) <= fov){
-                if(Math.abs(robot.getX() - x) + Math.abs(robot.getY() - y) < (minX == Integer.MAX_VALUE ? minX : Math.abs(minX) + Math.abs(minY))){
-                    minX = robot.getX() - x;
-                    minY = robot.getY() - y;
-                }
-            }
-        }
-        if(minX != Integer.MAX_VALUE)return new int[]{minX+fov, minX+fov};
-        return new int[]{2*fov+1, 2*fov+1};
-    }
 
+
+                }idx++;
+            }
+        }
+        return minIdx;
+    }
     public void step() {
         for (Robot robot : robots){
             robot.step();
@@ -112,4 +118,6 @@ public class Map {
     public Robot[] getRobots() {
         return robots;
     }
+
+
 }
