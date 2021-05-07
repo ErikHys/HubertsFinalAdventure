@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
+/**
+ * Simple tabular class to do Q learning from
+ */
 public class Tabular implements IWeights{
 
     private final double[][][][][][][] weights;

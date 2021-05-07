@@ -1,4 +1,7 @@
 package TreasureWorld;
 
-public class Chemical implements Items {
+/**
+ * Chemical object on screen, implements {@link Obstacle} since it is a non moving hindrance
+ */
+public class Chemical implements Obstacle {
 }

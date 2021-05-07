@@ -1,4 +1,4 @@
 package TreasureWorld;
 
-public class Wall implements Items {
+public class Wall implements Obstacle {
 }

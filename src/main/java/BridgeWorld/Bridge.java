@@ -2,9 +2,12 @@ package BridgeWorld;
 
 import java.util.Random;
 
+/**
+ * Bridge class, creates a random bridge give a size.
+ */
 public class Bridge {
     private BridgeLocation[] bridgeItems;
-    private BridgeHubert hubert;
+    private Random random;
 
     public Bridge(int length){
         bridgeItems = new BridgeLocation[length];
@@ -16,58 +19,47 @@ public class Bridge {
         setupBridge();
     }
 
-
-    public void setHubert(BridgeHubert hubert) {
-        this.hubert = hubert;
-    }
-
-    public void printBridge(){
-        for (int i = 0; i < bridgeItems.length; i++) {
-            BridgeLocation bridgeLoc = bridgeItems[i];
-            if (hubert != null && hubert.getLoc() == i) System.out.print("H");
-            else if (bridgeLoc.isStart()) System.out.print("S");
-            else if (bridgeLoc.isEnd()) System.out.print("E");
-            else if (bridgeLoc.isWorking()) System.out.print("=");
-            else System.out.print("X");
-        }
-        System.out.println();
-
-    }
-
     private void setupBridge() {
-        Random random = new Random();
+        random = new Random();
         double p = 0.2;
         for (int i = 1; i < bridgeItems.length-1; i++) {
             if(random.nextDouble() < p){
                 bridgeItems[i].setWorking(false);
             }else if(random.nextDouble() < p){
-                bridgeItems[i].setNest(true);
+                bridgeItems[i].setNest();
             }
         }
     }
 
-
-    public BridgeLocation[] getView(int view, int loc){
-        BridgeLocation[] hubertFOV = new BridgeLocation[view+1];
-        for (int i = loc, j = 0; i <= loc+view; i++, j++) {
-            hubertFOV[j] = bridgeItems[i];
-        }
-        return hubertFOV;
-    }
-
+    /**
+     * Fixes a log at given location
+     * @param loc location of broken log
+     */
     public void fixLoc(int loc){
         bridgeItems[loc].fix();
     }
 
+    /**
+     *
+     * @param loc Location of Bridge
+     * @return {@link BridgeLocation} The specified location
+     */
     public BridgeLocation getLoc(int loc) {
         return bridgeItems[loc];
     }
+
 
     public int getLength() {
         return bridgeItems.length;
     }
 
 
+    /**
+     * Get distance to closest hole
+     * @param fov Length Hubert can see
+     * @param loc Location of Hubert
+     * @return distance to closest Hole
+     */
     public int getDist(int fov, int loc) {
         for (int i = 1; i < fov; i++) {
             if(i+loc == getLength()) break;
@@ -78,16 +70,20 @@ public class Bridge {
         return 0;
     }
 
-    public int getDistStart(int fov, int loc) {
-        for (int i = 0; i < fov; i++) {
-            if(i+loc == getLength()) break;
-            if(!bridgeItems[loc+i].isStart()){
-                return i;
-            }
+    /**
+     * Decays all logs to the right of location
+     * @param loc
+     */
+    public void step(int loc){
+        for (int i = loc+1; i < getLength(); i++) {
+            bridgeItems[i].step(random);
         }
-        return fov;
     }
 
+    /**
+     * Fix a birds nests at location
+     * @param loc
+     */
     public void fixNest(int loc) {
         bridgeItems[loc].fixNest();
     }

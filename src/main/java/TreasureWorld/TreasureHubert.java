@@ -1,9 +1,10 @@
 package TreasureWorld;
 
-
-import java.util.ArrayList;
 import java.util.Random;
 
+/**
+ * A Hubert that hunts for jewels, treasure and throws away garbage
+ */
 public class TreasureHubert {
 
     private double epsilon;
@@ -13,10 +14,20 @@ public class TreasureHubert {
     private int x;
     private int y;
     private Random random;
-    private ArrayList<Items> bag;
     private int reward;
-    private int pointReward;
     private boolean isDead;
+    private int jewel;
+    private int garbageCnt;
+    private int treasureCnt;
+
+    /**
+     *
+     * @param startX
+     * @param startY
+     * @param map
+     * @param weights Weights for decision making
+     * @param fov How many steps ahead can Hubert see
+     */
 
     public TreasureHubert(int startX, int startY, Map map, Tabular weights, int fov){
         x = startX;
@@ -24,11 +35,15 @@ public class TreasureHubert {
         random = new Random();
         epsilon = 0.2;
         this.map = map;
-        bag = new ArrayList<>();
         this.weights = weights;
         this.fov = fov;
     }
 
+    /**
+     * Do a action
+     * @param action
+     * @return The reward of that action
+     */
     private int move(Action action){
         int oldR = reward;
         switch (action){
@@ -41,33 +56,53 @@ public class TreasureHubert {
         }
         return reward - oldR;
     }
-    
-    private Action epsilonGreedy(int jewelDist, int chemDist, int wallDist, int robotDist, int garbageDist){
+
+    /**
+     * Find a epsilon greedy action
+     * See {@link Map#getTypeLoc(int, int, int, Class)} for info on indexes
+     * @param jewelDist Index of closest jewel
+     * @param chemDist index of closest chemical
+     * @param binDist index of closest bin
+     * @param robotDist index of closest robot
+     * @param garbageDist index of closest garbage or treasure
+     * @param hasTreasureGarbage 1 or 0 based on if Hubert has any garbage or treasure
+     * @return the epsilon greedy action to take
+     */
+    private Action epsilonGreedy(int jewelDist, int chemDist, int binDist, int robotDist, int garbageDist, int hasTreasureGarbage){
         double p = random.nextDouble();
         if (p < epsilon){
             return Action.getRandomAction();
         }
-        return weights.getBestAction(jewelDist, chemDist, wallDist, robotDist, garbageDist);
+        return weights.getBestAction(jewelDist, chemDist, binDist, robotDist, garbageDist, hasTreasureGarbage);
     }
 
+    /**
+     * Do a time step
+     * @return reward, old state, old action, new state, new action
+     */
     public int[] step(){
-        int jewelDirDist = map.getTypeLoc(x, y, fov, GoodItems.class);
-        int chemDist = map.getTypeLoc(x, y, fov, Chemical.class);
-        int wallDist = map.getTypeLoc(x, y, fov, Wall.class);
-//        int wallDist = 0;
+        int jewelDirDist = map.getTypeLoc(x, y, fov, Jewel.class);
+        int chemDist = map.getTypeLoc(x, y, fov, Obstacle.class);
+        int binDist = map.getBinSafeDist(x, y, fov);
         int robotDist = map.getRobotDist(x, y, fov);
-        int garbageDist = 0;
-        Action action = epsilonGreedy(jewelDirDist, chemDist, wallDist, robotDist, garbageDist);
+        int garbageDist = map.getTypeLoc(x, y, fov, GoodItems.class);
+        int hasTreasureGarbage = treasureCnt+garbageDist > 0 ? 1 : 0;
+        Action action = epsilonGreedy(jewelDirDist, chemDist, binDist, robotDist, garbageDist, hasTreasureGarbage);
         int r = move(action);
-        int newJewelDirDist = map.getTypeLoc(x, y, fov, GoodItems.class);
-        int newChemDist = map.getTypeLoc(x, y, fov, Chemical.class);
-        int newWallDist = map.getTypeLoc(x, y, fov, Wall.class);
+        int newJewelDirDist = map.getTypeLoc(x, y, fov, Jewel.class);
+        int newChemDist = map.getTypeLoc(x, y, fov, Obstacle.class);
+        int newBinDist = 0;
         int newRobotDist = map.getRobotDist(x, y, fov);
-//        int newWallDist = 0;
-        int newGarbageDist = 0;
-        Action newAction = epsilonGreedy(newJewelDirDist, newChemDist, newWallDist, newRobotDist, newGarbageDist);
-        return new int[]{r, jewelDirDist, chemDist, wallDist, robotDist, garbageDist, action.getActionIndex(), newJewelDirDist, newChemDist, newWallDist, newRobotDist, newGarbageDist, newAction.getActionIndex()};
+        int newGarbageDist = map.getTypeLoc(x, y, fov, GoodItems.class);
+        int newHasTreasureGarbage = treasureCnt+garbageDist > 0 ? 1 : 0;
+        Action newAction = epsilonGreedy(newJewelDirDist, newChemDist, newBinDist, newRobotDist, newGarbageDist, newHasTreasureGarbage);
+        return new int[]{r, jewelDirDist, chemDist, binDist, robotDist, garbageDist, hasTreasureGarbage, action.getActionIndex(), newJewelDirDist, newChemDist, newBinDist, newRobotDist, newGarbageDist, newHasTreasureGarbage, newAction.getActionIndex()};
     }
+
+    /**
+     * Change position based on a action
+     * @param action
+     */
     private void changePos(Action action) {
         if(action.getX() + x < map.getSize() && action.getX() + x >= 0 && action.getY() + y < map.getSize()
                 && action.getY() + y >= 0){
@@ -84,35 +119,67 @@ public class TreasureHubert {
             x += action.getX();
             y += action.getY();
             if(map.getLoc(x, y).isChemical()){
-                reward -= 5;
-                pointReward--;
+                reward -= 100;
                 isDead = true;
             }
         }
     }
 
+    /**
+     * Drop an item if Hubert is at a bin
+     */
     private void drop() {
+        if(garbageCnt > 0 && map.getLoc(x, y).isHasBin()){
+            reward += garbageCnt*5;
+            reward += treasureCnt*5;
+            garbageCnt = 0;
+            treasureCnt = 0;
+
+        }
     }
 
+    /**
+     * Pick up an item
+     */
     private void pickup() {
 
-        if(map.getLoc(x, y).isJewel() || map.getLoc(x, y).isGarbage()){
-            bag.add(map.getLoc(x, y).pickupItem());
+        if(map.getLoc(x, y).isJewel() || map.getLoc(x, y).isGarbage() || map.getLoc(x, y).isTreasure()){
+            if(map.getLoc(x, y).isJewel()){
+                reward += 50;
+                jewel = 1;
+            }
+            else if(map.getLoc(x, y).isGarbage() && garbageCnt < 10) {
+                garbageCnt++;
+                map.getLoc(x,y).pickupItem();
+            }
+            else if(map.getLoc(x, y).isTreasure() && treasureCnt < 10){
+                treasureCnt++;
+
+                map.getLoc(x,y).pickupItem();
+            }
             reward += 5;
-            pointReward++;
+
         }
 
     }
 
+    /**
+     * Check if Hubert is dead or has found the jewel
+     * @return true if episode is done
+     */
     public boolean finished() {
-        for (Items items: bag){
-            if(items.getClass() == Jewel.class){
-                return true;
+        if(jewel == 1){
+            return true;
         }
+        return isDead;
+    }
 
-        }
-        if(isDead)return true;
-        return false;
+    /**
+     * Check if Hubert has run into chemicals
+     * @return true if Hubert has run into chemicals
+     */
+    public boolean finishedCont(){
+        return isDead;
     }
 
     public int getX() {
@@ -123,12 +190,17 @@ public class TreasureHubert {
         return y;
     }
 
+    /**
+     * Reset Hubert to get him ready for a new episode
+     * @param map The new map
+     */
     public void reset(Map map){
         this.map = map;
-        bag = new ArrayList<>();
         reward = 0;
-        pointReward = 0;
         isDead = false;
+        jewel = 0;
+        garbageCnt = 0;
+        treasureCnt = 0;
     }
 
     public int getReward() {
@@ -139,7 +211,11 @@ public class TreasureHubert {
         epsilon = e;
     }
 
-    public int getPointReward() {
-        return pointReward;
+    public int getGarbageCnt() {
+        return garbageCnt;
+    }
+
+    public int getTreasureCnt() {
+        return treasureCnt;
     }
 }

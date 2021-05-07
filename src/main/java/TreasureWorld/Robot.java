@@ -1,5 +1,8 @@
 package TreasureWorld;
 
+/**
+ * Random walk robot that spawns garbage
+ */
 public class Robot {
 
     private final Map map;
@@ -15,6 +18,9 @@ public class Robot {
         this.map = map;
     }
 
+    /**
+     * Do a random move
+     */
     public void step(){
         RobotAction action = RobotAction.getRandomAction();
         move(action);

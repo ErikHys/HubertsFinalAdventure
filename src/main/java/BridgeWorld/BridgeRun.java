@@ -12,9 +12,13 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Random;
 
+
+/**
+ * The main class for challenge 1.
+ * Connects bridge, Hubert, Weights and rendering together
+ */
 public class BridgeRun implements ApplicationListener {
 
     private Random random;
@@ -26,20 +30,26 @@ public class BridgeRun implements ApplicationListener {
     private BridgeHubert bridgeHubert;
     private IWeights weights;
 
+    /**
+     * Constructor from libGDX
+     */
     @Override
     public void create() {
         batch = new SpriteBatch();
         random = new Random();
-        bridgeLength = random.nextInt(5) + 15;
+        bridgeLength = 25;
         bridge = new Bridge(bridgeLength);
-        weights = new Tabular(6, 0.01);
-        bridgeHubert = new BridgeHubert(6, bridge, weights, 0.2);
+        weights = new Tabular(20, 0.001);
+        bridgeHubert = new BridgeHubert(20, bridge, weights, 1.2);
         thread = new Thread(this::nStep);
         thread.start();
         ep = 0;
     }
 
 
+    /**
+     * Basic TD learning
+     */
     public void simulateTD(){
         double wAvg = 0;
         for (ep = 0; ep < 10000000; ep++) {
@@ -49,7 +59,7 @@ public class BridgeRun implements ApplicationListener {
                         values[8], values[9], values[10], values[11], values[12], values[13], values[14]);
                 if((ep+1) % 500000 == 0) {
                     try {
-                        Thread.sleep(10);
+                        Thread.sleep(50);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -63,48 +73,37 @@ public class BridgeRun implements ApplicationListener {
 
     }
 
+    /**
+     * Weighted average function
+     * @param wAvg
+     * @return
+     */
     private double getwAvg(double wAvg) {
-        wAvg += (bridgeHubert.getReward() - wAvg)*0.001;
-        if(ep % 100000 == 0) System.out.println(wAvg);
-        bridgeLength = random.nextInt(5) + 15;
-        bridge = new Bridge(bridgeLength);
-        bridgeHubert.reset(bridge);
-        if (ep == 1000000){
-            bridgeHubert.setEpsilon(0.05);
-        }
+        wAvg += (bridgeHubert.getReward() - wAvg)*0.0001;
+        if(ep % 10000 == 0) System.out.println("Ep: " + ep + " weighted avg: " + wAvg);
+        reset();
         return wAvg;
     }
 
-    //This does not converge at all
-    public void simulateMonteCarlo(){
-        double wAvg = 0;
-        for (ep = 0; ep < 10000000; ep++) {
-            ArrayList<int[]> mcValues = new ArrayList<>();
-            int limit = 0;
-            while (!bridgeHubert.finished() && limit < 1000000) {
-                mcValues.add(bridgeHubert.mcStep());
-                if((ep+1) % 500000 == 0) {
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                limit++;
-            }
-            Collections.reverse(mcValues);
-            int g = mcValues.get(0)[0];
-            for (int[] value: mcValues){
-//                weights.update(g - value[0], value[1], value[2], value[3], value[4], value[5], value[6], value[7], value[8], value[9], value[10]);
-            }
+    /**
+     * Make a new bridge to Hubert, and every 100000 episode increase the size of said bridge
+     */
+    private void reset(){
 
-            wAvg = getwAvg(wAvg);
+        if ((ep+1) % 100000 == 0){
+            bridgeLength += 2;
+            bridgeHubert.setEpsilon(0.05);
+            System.out.println("Increasing difficulty");
         }
+        bridge = new Bridge(bridgeLength);
+        bridgeHubert.reset(bridge);
     }
 
-    // Converges faster, but Hubert still likes to dance at the middle, if I give him minus reward for each step he doesn't converge.
-    // Does not converge with nests
+    /**
+     * nStep Q learning
+     */
     public void nStep(){
+        // Converges faster, but Hubert still likes to dance at the middle, if I give him minus reward for each step he doesn't converge.
         int n = 5;
         double wAvg = 0;
         for (ep = 0; ep < 10000000; ep++) {
@@ -115,9 +114,10 @@ public class BridgeRun implements ApplicationListener {
                 if (nValues.size() == n){
                     updateNStep(nValues);
                 }
-                if((ep+1) % 500000 == 0) {
+                //Uncomment this you want slower render te see what is going on.
+                if((ep+1) % 100000 == 0) {
                     try {
-                        Thread.sleep(25);
+                        Thread.sleep(50);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -132,10 +132,52 @@ public class BridgeRun implements ApplicationListener {
         }
     }
 
+    /**
+     * nStep for the final task, where Hubert just tries to maintain the bridge for as long as possible
+     */
+    public void nStepCont(){
+        int n = 15;
+        double wAvg = 0;
+        double wAvgSteps = 0;
+        for (ep = 0; ep < 10000000; ep++) {
+            ArrayList<int[]> nValues = new ArrayList<>();
+            int step = 1;
+            while (!bridgeHubert.finishedCont()){
+                int[] values = bridgeHubert.step();
+                nValues.add(values);
+                if (nValues.size() == n){
+                    updateNStep(nValues);
+                }
+                bridge.step(bridgeHubert.getLoc());
+                step++;
+                if((ep+1) % 100000 == 0) {
+                    try {
+                        Thread.sleep(25);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+            }
+            while (nValues.size() > 0){
+                updateNStep(nValues);
+            }
+            wAvg += ((bridgeHubert.getReward())/(double)step - wAvg) * 0.0001;
+            wAvgSteps += (step - wAvgSteps) * 0.0001;
+            if((ep+1)% 400 == 0)System.out.println(wAvg + " " + wAvgSteps);
+            reset();
+
+        }
+    }
+
+    /**
+     * Update weights according to nStep  algorithm
+     * @param nValues ArrayList of n StateActions
+     */
     private void updateNStep(ArrayList<int[]> nValues) {
         double g = 0;
         for (int i = 0; i < nValues.size(); i++) {
-            double gi = nValues.get(i)[0]*Math.pow(0.9, i);
+            double gi = nValues.get(i)[0]*Math.pow(0.7, i);
             g += gi;
         }
         int[] old = nValues.get(0);
@@ -158,6 +200,7 @@ public class BridgeRun implements ApplicationListener {
         for (Texture bgLayer: GeneralTexturesBridge.BGS){
             batch.draw(bgLayer, 0, 0, 800, 480);
         }
+        // Set this to true if you don't want to see loading bar
         if((ep+1) % 500000 == 0){
             renderBridge();
             renderHubert();
@@ -167,6 +210,9 @@ public class BridgeRun implements ApplicationListener {
         batch.end();
     }
 
+    /**
+     * Renders Hubert and the information about him, charge, if he has a log, and if he has fixed enough nests
+     */
     private void renderHubert() {
         TextureRegion currentDirHubert = bridgeHubert.isFacingRight() ? GeneralTexturesBridge.HUBERT_RIGHT : GeneralTexturesBridge.HUBERT_LEFT;
         batch.draw(currentDirHubert, bridgeHubert.getLoc()*32, 240);
@@ -177,8 +223,11 @@ public class BridgeRun implements ApplicationListener {
         }
     }
 
+    /**
+     * Renders the bridge
+     */
     private void renderBridge() {
-        for (int i = 0; i < bridgeLength; i++) {
+        for (int i = 0; i < bridge.getLength(); i++) {
             if(bridge.getLoc(i).isWorking()){
                 batch.draw(GeneralTexturesBridge.BRIDGE_WORKING, 32*i, 210);
             }else {
@@ -201,12 +250,11 @@ public class BridgeRun implements ApplicationListener {
 
     }
 
+    /**
+     * On close
+     */
     @Override
     public void dispose() {
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        thread.interrupt();
     }
 }

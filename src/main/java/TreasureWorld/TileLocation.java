@@ -1,9 +1,11 @@
 package TreasureWorld;
 
-import Textures.GeneralTexturesMap;
 
 import java.util.Random;
 
+/**
+ * Store all the information of a single tile
+ */
 public class TileLocation {
 
     private final int textureInt;
@@ -11,18 +13,31 @@ public class TileLocation {
     private boolean hasBin;
     private boolean hasSafe;
 
+
+    /**
+     *
+     * @param item The item belonging to this tile
+     */
     public TileLocation(Items item){
         this.item = item;
         textureInt = new Random().nextInt(15);
 
     }
 
+    /**
+     * Remove the item
+     * @return
+     */
     public Items pickupItem() {
         Items temp = item;
         item = null;
         return temp;
     }
 
+    /**
+     *
+     * @return item on this tile
+     */
     public Items getItem() {
         return item;
     }
@@ -34,14 +49,21 @@ public class TileLocation {
         return textureInt;
     }
 
+    /**
+     * Make this tile a chemical tile
+     */
     public void chemical() {
         item = new Chemical();
     }
+
 
     public boolean isChemical() {
         return item instanceof Chemical;
     }
 
+    /**
+     * Make this tile a wall tile
+     */
     public void wall() {
         item = new Wall();
     }
@@ -50,8 +72,11 @@ public class TileLocation {
         return item instanceof Wall;
     }
 
+    /**
+     * Spawn some garbage on this tile
+     */
     public void garbage() {
-        item = new Garbage();
+        if(!isJewel() && !isChemical())item = new Garbage();
     }
 
     public boolean isGarbage() {
@@ -62,15 +87,18 @@ public class TileLocation {
         hasBin = true;
     }
 
-    public void safe(){
-        hasSafe = true;
-    }
-
     public boolean isHasBin() {
         return hasBin;
     }
 
-    public boolean isHasSafe() {
-        return hasSafe;
+    public boolean isTreasure() {
+        return item instanceof Treasure;
+    }
+
+    /**
+     * Spawn some treasure on this tile
+     */
+    public void treasure() {
+        item = new Treasure();
     }
 }

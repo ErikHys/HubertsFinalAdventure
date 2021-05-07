@@ -1,4 +1,7 @@
 package TreasureWorld;
 
-public class Jewel implements GoodItems {
+/**
+ * The episode ending Jewel
+ */
+public class Jewel implements Items{
 }

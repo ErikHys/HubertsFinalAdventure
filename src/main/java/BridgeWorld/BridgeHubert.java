@@ -5,7 +5,7 @@ import BridgeWorld.Weights.IWeights;
 import java.util.Random;
 
 /**
- *
+ * Class for representing Hubert's values and decision making.
  */
 public class BridgeHubert {
 
@@ -23,6 +23,13 @@ public class BridgeHubert {
     private int fixedNests;
     private int maxNests;
 
+    /**
+     *
+     * @param view How far Hubert can see
+     * @param bridge The current bridge
+     * @param weights The weights class for making decisions
+     * @param e epsilon for epsilon greedy
+     */
     public BridgeHubert(int view, Bridge bridge, IWeights weights, double e) {
         fov = view;
         loc = 0;
@@ -38,6 +45,11 @@ public class BridgeHubert {
         charge = 3;
     }
 
+    /**
+     * Hubert does a move
+     * @param action the action Hubert should preform
+     * @return the reward of that action
+     */
     public int move(Action action){
         int oldReward = reward;
         switch (action){
@@ -46,28 +58,31 @@ public class BridgeHubert {
             case PICKUP -> pickup();
             case CHARGE -> chargeHubert();
         }
-//        reward--;
         return reward - oldReward;
     }
 
+    /**
+     * Charges Hubert one charge if at the start.
+     */
     private void chargeHubert() {
-        if(bridge.getLoc(loc).isStart()){
-            charge = 3;
-        }else {
-//            reward--;
+        if(bridge.getLoc(loc).isStart() && charge < 3){
+            charge++;
         }
     }
 
+    /**
+     * Picks up a log if he is at the start
+     */
     private void pickup() {
         if(bridge.getLoc(loc).isStart() && !hasLog) {
             hasLog = true;
-//            reward += 5;
-        }
-        else {
-            reward--;
         }
     }
 
+    /**
+     * Changes the Hubert's Position, and punishes if Hubert falls off
+     * @param actionNumber the change(-1, 1) left/right
+     */
     private void changePos(int actionNumber) {
         if (loc+actionNumber < bridge.getLength() && loc+actionNumber >= 0) {
             if (!bridge.getLoc(loc+actionNumber).isWorking()){
@@ -80,14 +95,15 @@ public class BridgeHubert {
                 finished();
             }
 
-        }else {
-            reward -= 5;
-        }
+        }else reward -= 5;
 
     }
 
+    /**
+     * Fixes a hole or nest
+     */
     private void fix() {
-        if (!bridge.getLoc(loc+1).isWorking() && hasLog && charge > 0){
+        if (loc+1 < bridge.getLength() && !bridge.getLoc(loc+1).isWorking() && hasLog && charge > 0){
             reward += 25;
             bridge.fixLoc(loc+1);
             hasLog = false;
@@ -99,25 +115,44 @@ public class BridgeHubert {
             bridge.fixNest(loc);
             fixedNests++;
             charge--;
-        }
+        }else reward--;
     }
 
+    /**
+     * Checks if Hubert is finished with the run
+     * @return true if Hubert has fallen off or reached the end
+     */
     public boolean finished() {
         if(bridge.getLoc(loc).isEnd() || isDead){
             if(!isDead){
                 reward += 500;
-            }else {
-                reward -= 500;
             }
             return true;
         }
         return false;
     }
 
+    /**
+     *
+     * @return true if Hubert has fallen off
+     */
+    public boolean finishedCont() {
+        return isDead;
+    }
+
+    /**
+     * Hubert does a time step.
+     * He looks around, makes a decision, looks around again.
+     * @return Reward, old state, old action, new state, new action
+     */
     public int[] step(){
         return stepUtil();
     }
 
+    /**
+     * See {@link BridgeHubert#step()}
+     * @return
+     */
     private int[] stepUtil(){
         int dist = bridge.getDist(fov, loc);
         int oldLog = hasLog ? 1 : 0;
@@ -134,17 +169,16 @@ public class BridgeHubert {
         int newHasNestF = bridge.getLoc(loc).isNestFixed() ? 1 : 0;
         int newMax = fixedNests < maxNests ? 1 : 0;
         int newCharge = charge;
-//        if(r == -1000) System.out.println("Stupid1");
         return new int[]{r, dist, oldLog, action.getActionIndex(), newDist, newLog, newAction.getActionIndex(), distStart, newDistStart, oldHasNestF, newHasNestF, max, newMax, cCharge, newCharge};
 
     }
 
-    public int[] mcStep(){
-        int[] values = stepUtil();
-        values[0] = reward;
-        return values;
-    }
-
+    /**
+     * Does a epsilon greedy move
+     * @param dist Distance to closest hole
+     * @param distStart (1, 0) if Hubert is at the start
+     * @return The epsilon greedy action to take
+     */
     private Action epsilonGreedy(int dist, int distStart) {
         double p = random.nextDouble();
         if (p < epsilon){
@@ -152,24 +186,6 @@ public class BridgeHubert {
         }
         return weights.getBestAction(dist, distStart, hasLog ? 1 : 0, bridge.getLoc(loc).isNestFixed() ? 1 : 0, fixedNests < maxNests ? 1 : 0, charge);
     }
-
-
-
-    private int getNextLog(Action action) {
-
-        if (action == Action.PICKUP && bridge.getLoc(loc).isStart()) return 1;
-        if (action == Action.FIX && !bridge.getLoc(loc+1).isWorking()) return 0;
-        return hasLog ? 1 : 0;
-    }
-
-    private int getNextPos(int actionNumber) {
-        if (loc + actionNumber < bridge.getLength() && loc + actionNumber >= 0 && bridge.getLoc(loc + actionNumber).isWorking()) {
-                return loc + actionNumber;
-        }else {
-            return 0;
-        }
-    }
-
 
 
     public void reset(Bridge bridge) {
@@ -213,4 +229,6 @@ public class BridgeHubert {
     public int getCharge() {
         return charge;
     }
+
+
 }

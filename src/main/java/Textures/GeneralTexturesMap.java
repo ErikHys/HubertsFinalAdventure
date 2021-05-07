@@ -54,5 +54,9 @@ public class GeneralTexturesMap {
     public static TextureRegion PLANTCHEM = new TextureRegion(FOREST, 32*13, 32, 32, 32);
     public static TextureRegion STONEWALL = new TextureRegion(FOREST, 32*11, 32, 32, 32);
     public static TextureRegion ROBOT = new TextureRegion(new Texture("Textures/elias_robot.png"));
-    public static TextureRegion GARBAGE = new TextureRegion(new Texture("Textures/littered_dungeon.png"), 64, 32, 32, 32);
+    public static Texture LITTER = new Texture("Textures/littered_dungeon.png");
+    public static TextureRegion GARBAGE = new TextureRegion(LITTER, 64, 32, 32, 32);
+    public static TextureRegion BIN = new TextureRegion(LITTER, 32, 32, 32,32);
+    public static Texture GOLD = new Texture("Textures/gold.png");
+    public static TextureRegion TREASURE = new TextureRegion(GOLD, 32, 96, 32, 32);
 }

@@ -3,6 +3,9 @@ package TreasureWorld;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Random walk robots actions
+ */
 public enum RobotAction {
     LEFT (0, -1, 0),
     RIGHT (0, 1, 1),
